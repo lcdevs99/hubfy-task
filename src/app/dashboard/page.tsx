@@ -108,14 +108,15 @@ export default function DashboardPage() {
       });
       const data = await res.json();
       if (res.ok && data.success) {
-        setTasks([...tasks, data.task]);
         showSuccess("Tarefa criada com sucesso!");
         setTitle("");
         setDescription("");
+        fetchTasks(token!, page, filter);
       } else {
         handleAuthError(data.message || "Erro ao criar tarefa");
       }
-    } catch {
+    } catch (err) {
+      console.error("[handleCreateTask] Erro:", err);
       showError("Erro de conexão");
     }
   }
@@ -129,12 +130,13 @@ export default function DashboardPage() {
       });
       const data = await res.json();
       if (res.ok && data.success) {
-        setTasks(tasks.filter((t) => t.id !== id));
         showSuccess("Tarefa deletada!");
+        fetchTasks(token!, page, filter);
       } else {
         handleAuthError(data.message || "Erro ao deletar tarefa");
       }
-    } catch {
+    } catch (err) {
+      console.error("[handleDeleteTask] Erro:", err);
       showError("Erro de conexão");
     }
   }
@@ -152,16 +154,13 @@ export default function DashboardPage() {
       });
       const data = await res.json();
       if (res.ok && data.success) {
-        setTasks(
-          tasks.map((t) =>
-            t.id === id ? { ...t, status: data.task.status } : t
-          )
-        );
         showSuccess("Tarefa atualizada!");
+        fetchTasks(token!, page, filter);
       } else {
         handleAuthError(data.message || "Erro ao atualizar tarefa");
       }
-    } catch {
+    } catch (err) {
+      console.error("[handleUpdateTask] Erro:", err);
       showError("Erro de conexão");
     }
   }
@@ -222,8 +221,7 @@ export default function DashboardPage() {
         <select
           value={filter}
           onChange={(e) => setFilter(e.target.value as any)}
-          className="text-black px-2 py-1 rounded disabled:opacity-50"
-          disabled={tasks.length === 0} // ✅ bloqueia se não houver tarefas
+          className="text-black px-2 py-1 rounded"
         >
           <option value="all">Todas</option>
           <option value="pending">Pendente</option>
@@ -237,42 +235,51 @@ export default function DashboardPage() {
         <p>Carregando tarefas...</p>
       ) : (
         <>
-          <ul className="space-y-2">
-            {filteredTasks.map((task) => (
-              <li
-                key={task.id}
-                className="flex justify-between items-center bg-white text-black p-3 rounded shadow"
-              >
-                <div>
-                  <p className="font-semibold">{task.title}</p>
-                  <p className="text-sm">{task.description}</p>
-                  <p className="text-xs italic">
-                    Status: {statusLabels[task.status]}
-                  </p>
-                </div>
-                <div className="flex gap-2">
-                  <button
-                    onClick={() => handleUpdateTask(task.id, "in_progress")}
-                    className="bg-blue-600 text-white px-2 py-1 rounded text-sm"
+          {tasks.length === 0 ? (
+            <p className="text-red-200 text-sm font-semibold">
+              Nenhuma tarefa cadastrada para esse status. Adicione uma nova para
+              começar!
+            </p>
+          ) : (
+            <>
+              <ul className="space-y-2">
+                {filteredTasks.map((task) => (
+                  <li
+                    key={task.id}
+                    className="flex justify-between items-center bg-white text-black p-3 rounded shadow"
                   >
-                    Em andamento
-                  </button>
-                  <button
-                    onClick={() => handleUpdateTask(task.id, "completed")}
-                    className="bg-green-600 text-white px-2 py-1 rounded text-sm"
-                  >
-                    Finalizar
-                  </button>
-                  <button
-                    onClick={() => handleDeleteTask(task.id)}
-                    className="bg-red-600 text-white px-2 py-1 rounded text-sm"
-                  >
-                    Deletar
-                  </button>
-                </div>
-              </li>
-            ))}
-          </ul>
+                    <div>
+                      <p className="font-semibold">{task.title}</p>
+                      <p className="text-sm">{task.description}</p>
+                      <p className="text-xs italic">
+                        Status: {statusLabels[task.status]}
+                      </p>
+                    </div>
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => handleUpdateTask(task.id, "in_progress")}
+                        className="bg-blue-600 text-white px-2 py-1 rounded text-sm"
+                      >
+                        Em andamento
+                      </button>
+                      <button
+                        onClick={() => handleUpdateTask(task.id, "completed")}
+                        className="bg-green-600 text-white px-2 py-1 rounded text-sm"
+                      >
+                        Finalizar
+                      </button>
+                      <button
+                        onClick={() => handleDeleteTask(task.id)}
+                        className="bg-red-600 text-white px-2 py-1 rounded text-sm"
+                      >
+                        Deletar
+                      </button>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            </>
+          )}
 
           {/* Paginação */}
           <div className="flex gap-4 items-center mt-6">
