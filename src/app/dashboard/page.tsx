@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import type { Task } from "@/lib/db";
+import toast from "react-hot-toast";
 
 const statusLabels: Record<Task["status"], string> = {
   pending: "Pendente",
@@ -167,6 +168,7 @@ export default function DashboardPage() {
 
   function handleLogout() {
     localStorage.removeItem("token");
+    toast.success("Logout realizado com sucesso!"); // toast de sucesso
     router.push("/login");
   }
 
@@ -220,7 +222,8 @@ export default function DashboardPage() {
         <select
           value={filter}
           onChange={(e) => setFilter(e.target.value as any)}
-          className="text-black px-2 py-1 rounded"
+          className="text-black px-2 py-1 rounded disabled:opacity-50"
+          disabled={tasks.length === 0} // ✅ bloqueia se não houver tarefas
         >
           <option value="all">Todas</option>
           <option value="pending">Pendente</option>
